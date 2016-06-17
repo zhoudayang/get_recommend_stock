@@ -39,6 +39,9 @@ def convert_jsonp_to_json(jsonp):
 
 
 json_str = convert_jsonp_to_json(data)
+if json_str is None:
+    print 'please check jsonp str! it is wrong!'
+    exit(-1)
 
 decode_dict = json.loads(json_str)
 result_list = decode_dict['result']
