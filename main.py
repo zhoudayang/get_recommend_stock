@@ -31,6 +31,7 @@ data = data.decode(encode, 'ignore')
 # 返回的数据是一个jsonp数据
 # 函数功能:将　jsonp字符串转换为json字符串
 def convert_jsonp_to_json(jsonp):
+    #采用最大匹配
     jsonp_list = re.findall("\((.*)\)", jsonp)
     if len(jsonp_list) == 0:
         print 'error! no brackets!'
