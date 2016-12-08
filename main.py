@@ -1,4 +1,4 @@
-# __author__ = 'fit'
+# __author__ = 'zhouyang'
 # -*- coding: utf-8 -*-
 
 import urllib2
@@ -22,7 +22,7 @@ request = urllib2.Request(url)
 request.add_header('User-Agent', user_agent)
 request.add_header("host", host)
 request.add_header("Referer", referer)
-reader = urllib2.urlopen(url)
+reader = urllib2.urlopen(request)
 data = reader.read()
 encode = chardet.detect(data)["encoding"]
 data = data.decode(encode, 'ignore')
