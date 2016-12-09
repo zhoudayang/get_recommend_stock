@@ -6,6 +6,7 @@ import re
 import json
 import time
 import datetime
+import sys
 
 
 class Index:
@@ -39,16 +40,102 @@ class Index:
     def set_code(self, code):
         self.code = code
 
+    def set_value(self, key, value):
+        if key == "6":
+            self.set_last_close(value)
+        elif key == "7":
+            self.set_today_open(value)
+        elif key == "10":
+            self.set_last_price(value)
+        elif key == "199112":
+            self.set_change_rate(value)
+        elif key == "264648":
+            self.set_today_change(value)
+        elif key == "name":
+            self.set_name(value)
+        elif key == "code":
+            self.set_code(value)
+        else:
+            print "unknown %s:%s" % key, value
+
     def to_str(self):
         if self.code is None or self.name is None:
             return ""
         result = ""
-        result += "指数代码 : " + self.code + "\n"
-        result += "指数名称 : " + self.name + "\n"
-        result += "昨收 : " + self.last_close + "\n"
-        result += "今开 : " + self.today_open + "\n"
-        result += "最新价 : " + self.last_price + "\n"
-        result += "变动 : " + self.change + " 变动比例 : " + self.change_rate + "\n"
+        result += "\t" +"指数代码 : " + self.code + "\n"
+        result += "\t" +"指数名称 : " + self.name + "\n"
+        result += "\t" +"昨收 : " + self.last_close + "\n"
+        result += "\t" +"今开 : " + self.today_open + "\n"
+        result += "\t" +"最新价 : " + self.last_price + "\n"
+        result += "\t" +"变动 : " + self.change + " 变动比例 : " + self.change_rate + "\n"
+        return result
+
+
+class Stock:
+    def __init__(self):
+        self.last_close = None
+        self.today_open = None
+        self.last_price = None
+        self.change = None
+        self.change_rate = None
+        self.code = None
+        self.date = None
+        self.name = None
+
+    def set_last_price(self, last_price):
+        self.last_price = last_price
+
+    def set_today_open(self, today_open):
+        self.today_open = today_open
+
+    def set_last_close(self, last_close):
+        self.last_close = last_close
+
+    def set_change(self, change):
+        self.change = change
+
+    def set_change_rate(self, change_rate):
+        self.change_rate = float(change_rate)
+
+    def set_code(self, code):
+        self.code = code
+
+    def set_name(self, name):
+        self.name = name
+
+    def set_date(self, date):
+        self.date = date
+
+    def set_key_value(self, key, value):
+        if key == "6":
+            self.set_last_close(value)
+        elif key == "7":
+            self.set_today_open(value)
+        elif key == "10":
+            self.set_last_price(value)
+        elif key == "199112":
+            self.set_change_rate(value)
+        elif key == "264648":
+            self.set_change(value)
+        elif key == "name":
+            self.set_name(value)
+        elif key == "code":
+            self.set_code(value)
+        elif key == "date":
+            self.set_date(value)
+
+    def to_str(self):
+        if self.code is None or self.name is None:
+            return ""
+        result = ""
+        result += "\t" + "股票代码 : " + self.code + "\n"
+        result += "\t" +"股票名称 : " + self.name + "\n"
+        result += "\t" +"昨收 : " + self.last_close + "\n"
+        result += "\t" +"今开 : " + self.today_open + "\n"
+        result += "\t" +"最新价 : " + self.last_price + "\n"
+        result += "\t" +"变动 : " + self.change + "\n"
+        result += "\t" +"变动比例: " + str(self.change_rate) + "\n"
+        result += "\t" +"日期 : " + self.date + "\n"
         return result
 
 
@@ -97,99 +184,60 @@ class stock_crawler:
 
     def decode_json(self):
         json_str = self.get_json()
+        strategys = {
+            "461357": "W&R短线超跌",
+            "461498": "尖三兵",
+            "461500": "多方炮",
+            "461506": "超级短线波段",
+            "526841": "倒锤线",
+            "526846": "红三兵",
+            "526854": "涨停回马枪",
+            "dtpl": "均线多头",
+            "cxg": "创新高",
+            "lxsz": "连续上涨"
+        }
         decode_dict = json.loads(json_str)
-        assert ("index" in decode_dict)
-        index = decode_dict["index"]
-        print index
+        indexes = []
+        stocks = []
+        for strategy in decode_dict:
+            if strategy == "index":
+                for one in decode_dict[strategy]:
+                    index = Index()
+                    for key, value in one.items():
+                        index.set_value(key, value)
+                    indexes.append(index)
+            else:
+                strategy_dict = {}
+                if strategy in strategys:
+                    strategy_dict["strategy"] = strategys[strategy]
+                else:
+                    strategy_dict["strategy"] = "策略代号:%s" % strategy
+                one_strategy = decode_dict[strategy]
+                strategy_dict["successRate"] = one_strategy["successRate"]
+                Stocks = []
+                for one in one_strategy["list"]:
+                    stock = Stock()
+                    for key, value in one.items():
+                        stock.set_key_value(key, value)
+                    Stocks.append(stock)
+                strategy_dict["list"] = Stocks
+                stocks.append(strategy_dict)
+        return indexes, stocks
 
-    def to_str(self):
-        if self.code is None or self.name is None:
-            return ""
-        result = ""
-        result += "指数代码 : " + self.code + "\n"
-        result += "指数名称 : " + self.name + "\n"
-        result += "昨收 : " + self.last_close + "\n"
-        result += "今开 : " + self.today_open + "\n"
-        result += "最新价 : " + self.last_price + "\n"
-        result += "变动 : " + self.change + "\n"
-        result += "变动比例 : " + self.change_rate + "\n"
-
-
-class Stock:
-    def __init__(self, strategy_names):
-        self.strategy_names = strategy_names
-        self.last_close = None
-        self.today_open = None
-        self.last_price = None
-        self.change = None
-        self.change_rate = None
-        self.code = None
-        self.date = None
-        self.name = None
-        self.strategy = None
-
-    def set_last_price(self, last_price):
-        self.last_price = last_price
-
-    def set_today_open(self, today_open):
-        self.today_open = today_open
-
-    def set_last_close(self, last_close):
-        self.last_close = last_close
-
-    def set_change(self, change):
-        self.change = change
-
-    def set_change_rate(self, change_rate):
-        self.change_rate = float(change_rate)
-
-    def set_code(self, code):
-        self.code = code
-
-    def set_name(self, name):
-        self.name = name
-
-    def set_date(self, date):
-        self.date = date
-
-    def set_strategy(self, strategy):
-        self.strategy = strategy
-
-    def to_str(self):
-        if self.code is None or self.name is None or self.strategy is None:
-            return ""
-        result = ""
-        result += "股票代码 : " + self.code + "\n"
-        result += "股票名称 : " + self.name + "\n"
-        result += "昨收 : " + self.last_close + "\n"
-        result += "今开 : " + self.today_open + "\n"
-        result += "最新价 : " + self.last_price + "\n"
-        result += "变动 : " + self.change + "\n"
-        result += "变动比例 : " + str(self.change_rate) + "\n"
-        result += "日期 : " + self.date + "\n"
-        if self.strategy not in self.strategy_names:
-            result += "策略代号 : " + self.strategy
-        else:
-            result += "策略名称 : " + self.strategy_names[self.strategy]
-        return result
+    def get_email_text(self):
+        indexes,stocks = self.decode_json()
+        email_text = "今日大盘指数 : \n"
+        for index in indexes:
+            email_text += index.to_str()
+            email_text += "\n"
+        email_text += "---------------------------------\n"
+        email_text += "今日智能选股结果:\n"
+        for strategy in stocks:
+            email_text += "策略名称 : " + strategy["strategy"] + " 成功率 : "+ str(strategy["successRate"]) + "\n\n"
+            for one in strategy["list"]:
+                email_text += one.to_str()
+                email_text += "\n"
+            email_text += "---------------------------------\n"
+        return email_text
 
 
-        # # 程序功能:抓取同花顺level2网站每日的股票推荐，发送邮件到邮箱进行提醒
-
-
-# url = "http://sp.10jqka.com.cn/api/ads/flag/id/4/"
-# user_agent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1"
-# host = "sd.10jqka.com.cn"
-# referer = "http://sd.10jqka.com.cn/index/"http://stock.10jqka.com.cn/api/znxg/index.html
-# request = urllib2.Request(url)
-# request.add_header('User-Agent', user_agent)
-# request.add_header("host", host)
-# request.add_header("Referer", referer)
-# reader = urllib2.urlopen(url)
-# data = reader.read()
-# encode = chardet.detect(data)["encoding"]
-# data = data.decode(encode, 'ignore')
-
-if __name__ == "__main__":
-    crawler = stock_crawler()
-    crawler.decode_json()

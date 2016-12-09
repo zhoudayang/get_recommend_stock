@@ -1,4 +1,4 @@
-# __author__ = 'fit'
+# __author__ = 'zhouyang'
 # -*- coding: utf-8 -*-
 
 from email.header import Header
