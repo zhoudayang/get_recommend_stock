@@ -56,8 +56,8 @@ class Index:
         elif key == "code":
             self.set_code(value)
         else:
-            print "unknown %s:%s" % key, value
-
+            print "unknown %s:%s" % (key, value)
+            
     def to_str(self):
         if self.code is None or self.name is None:
             return ""
@@ -123,7 +123,9 @@ class Stock:
             self.set_code(value)
         elif key == "date":
             self.set_date(value)
-
+        else:
+            print "unkonwn %s:%s\n" % (key,value)
+            
     def to_str(self):
         if self.code is None or self.name is None:
             return ""
